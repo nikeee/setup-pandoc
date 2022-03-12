@@ -1,8 +1,10 @@
+import * as path from "path";
+import cp from "child_process";
+
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
-import * as path from "path";
 import { compare } from "compare-versions";
 
 type Platform = "windows" | "mac" | "linux";
@@ -41,8 +43,18 @@ async function run() {
       : userSuppliedVersion;
 
 
-    core.debug(`fetching pandoc-version ${effectiveVersion}`);
+    core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
     await getPandoc(effectiveVersion);
+
+    // core.addPath(installDir);
+    // core.info("Added pandoc to the path");
+    core.info(`Successfully set up pandoc version ${effectiveVersion}`);
+
+    // output the version actually being used
+    const pandocPath = await io.which("pandoc");
+    const pandocVersion = (cp.execSync(`${pandocPath} --version`) ?? "").toString();
+    core.info(pandocVersion);
+
   } catch (error: any) {
     core.setFailed(error?.message ?? error ?? "Unknown error");
   }
