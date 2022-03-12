@@ -1,65 +1,92 @@
-let tempDirectory = process.env["RUNNER_TEMP"] || "";
-
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
 import * as path from "path";
-import * as util from "util";
-import * as fs from "fs";
-import { compare } from 'compare-versions';
+import { compare } from "compare-versions";
 
-const IS_WINDOWS = process.platform === "win32";
-const IS_MAC = process.platform === "darwin";
+type Platform = "windows" | "mac" | "linux";
 
-if (!tempDirectory) {
-  let baseLocation;
-  if (IS_WINDOWS) {
-    // On windows use the USERPROFILE env variable
-    baseLocation = process.env["USERPROFILE"] || "C:\\";
-  } else {
-    if (IS_MAC) {
-      baseLocation = "/Users";
-    } else {
-      baseLocation = "/home";
-    }
+const platform: Platform = process.platform === "win32"
+  ? "windows"
+  : process.platform === "darwin"
+    ? "mac"
+    : "linux";
+
+function getBaseLocation(platform: Platform) {
+  switch (platform) {
+    case "windows":
+      // On windows, use the USERPROFILE env variable
+      return process.env["USERPROFILE"] ?? "C:\\"
+    case "mac":
+      return "/Users";
+    case "linux":
+      return "/home";
+    default:
+      return assertNever(platform);
   }
-  tempDirectory = path.join(baseLocation, "actions", "temp");
 }
+
+const tempDirectory = process.env["RUNNER_TEMP"] ?? path.join(getBaseLocation(platform), "actions", "temp");
 
 async function run() {
   try {
-    let pandocVersion = core.getInput("pandoc-version");
-    core.debug(`got pandoc-version ${pandocVersion}`);
-    await getPandoc(pandocVersion);
-  } catch (error) {
-    core.setFailed(error.message);
+    const userSuppliedVersion = core.getInput("pandoc-version", {
+      required: false,
+      trimWhitespace: true,
+    });
+
+    const effectiveVersion = !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
+      ? ""
+      : userSuppliedVersion;
+
+
+    core.debug(`fetching pandoc-version ${effectiveVersion}`);
+    await getPandoc(effectiveVersion);
+  } catch (error: any) {
+    core.setFailed(error?.message ?? error ?? "Unknown error");
   }
 }
 
 export async function getPandoc(version: string) {
-  if (IS_WINDOWS) {
-    installPandocWindows(version);
-  } else if (IS_MAC) {
-    installPandocMac(version);
-  } else {
-    installPandocLinux(version);
+  switch (platform) {
+    case "windows": return installPandocWindows(version);
+    case "mac": return installPandocMac(version);
+    case "linux": return installPandocLinux(version);
+    default: return assertNever(platform);
   }
 }
 
-async function installPandocMac(version: string) {
-  const fileName = util.format("pandoc-%s-macOS.pkg", version);
-  const downloadUrl = util.format(
-    "https://github.com/jgm/pandoc/releases/download/%s/%s",
-    version,
-    fileName
-  );
-  let downloadPath: string | null = null;
+function getDownloadLink(platform: Platform, version: string): [url: string, fileName: string] {
+  const encodedVersion = encodeURIComponent(version);
+  const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
+  const fileName = getDownloadFileName(platform, version);
+  return [
+    `${base}/${fileName}`,
+    fileName,
+  ];
+}
 
+function getDownloadFileName(platform: Platform, version: string) {
+  const encodedVersion = encodeURIComponent(version);
+  switch (platform) {
+    case "linux": return `pandoc-${encodedVersion}-1-amd64.deb`; // TODO: Use tarball
+    case "windows": return `pandoc-${encodedVersion}-windows-x86_64.zip`;
+    case "mac": return `pandoc-${encodedVersion}-macOS.pkg`;
+    default: return assertNever(platform);
+  }
+}
+
+//#region Mac
+
+async function installPandocMac(version: string) {
+  const [downloadUrl, fileName] = getDownloadLink("mac", version);
+
+  let downloadPath: string;
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
   } catch (error) {
-    throw `Failed to download Pandoc ${version}: ${error}`;
+    throw new Error(`Failed to download Pandoc ${version}: ${error}`);
   }
 
   await io.mv(downloadPath, path.join(tempDirectory, fileName));
@@ -74,60 +101,51 @@ async function installPandocMac(version: string) {
   ]);
 }
 
-async function installPandocWindows(version: string) {
-  const fileName = util.format("pandoc-%s-windows-x86_64.zip", version);
-  const downloadUrl = util.format(
-    "https://github.com/jgm/pandoc/releases/download/%s/%s",
-    version,
-    fileName
-  );
-  let downloadPath: string | null = null;
+//#endregion
+//#region Windows
 
+async function installPandocWindows(version: string) {
+  const [downloadUrl] = getDownloadLink("windows", version);
+
+  let downloadPath: string;
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
   } catch (error) {
     throw `Failed to download Pandoc ${version}: ${error}`;
   }
 
-  //
   // Extract
-  //
-  let extPath: string = tempDirectory;
-  if (!extPath) {
+  if (!tempDirectory) {
     throw new Error("Temp directory not set");
   }
 
-  extPath = await tc.extractZip(downloadPath);
+  const extPath = await tc.extractZip(downloadPath);
 
   const toolPath = await tc.cacheDir(extPath, "pandoc", version);
 
   // It extracts to this folder
-  const toolRoot = path.join(toolPath, pandocSubdir(version));
+  const toolRoot = path.join(toolPath, getPandocSubDir(version));
 
   core.addPath(toolRoot);
 }
 
-function pandocSubdir(version: string) {
-  if (compare(version, "2.9.2", ">=")) {
-    return util.format("pandoc-%s", version);
-  }
+function getPandocSubDir(version: string) {
+  if (compare(version, "2.9.2", ">="))
+    return `pandoc-${version}`;
 
-  if (compare(version, "2.9.1", "=")) {
+  if (compare(version, "2.9.1", "="))
     return "";
-  }
 
-  return util.format("pandoc-%s-windows-x86_64", version);
+  return `pandoc-${version}-windows-x86_64`;
 }
 
-async function installPandocLinux(version: string) {
-  const fileName = util.format("pandoc-%s-1-amd64.deb", version);
-  const downloadUrl = util.format(
-    "https://github.com/jgm/pandoc/releases/download/%s/%s",
-    version,
-    fileName
-  );
-  let downloadPath: string | null = null;
+//#endregion
+//#region Linux (Debian)
 
+async function installPandocLinux(version: string) {
+  const [downloadUrl, fileName] = getDownloadLink("linux", version);
+
+  let downloadPath: string;
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
   } catch (error) {
@@ -142,11 +160,15 @@ async function installPandocLinux(version: string) {
       "--non-interactive",
       path.join(tempDirectory, fileName)
     ]);
-  } catch (error) {
-    core.debug(error);
-
-    throw `Failed to install pandoc: ${error}`;
+  } catch (error: any) {
+    throw new Error(`Failed to install pandoc: ${error}`);
   }
+}
+
+//#endregion
+
+function assertNever(_: never): never {
+  throw new Error("This code should not be reached");
 }
 
 run();
