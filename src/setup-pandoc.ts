@@ -94,7 +94,7 @@ function getDownloadLink(platform: Platform, version: string): [url: string, fil
 function getDownloadFileName(platform: Platform, version: string) {
   const encodedVersion = encodeURIComponent(version);
   switch (platform) {
-    case "linux": return `pandoc-${encodedVersion}-1-amd64.deb`; // TODO: Use tarball
+    case "linux": return `pandoc-${encodedVersion}-linux-amd64.tar.gz`;
     case "windows": return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac": return `pandoc-${encodedVersion}-macOS.pkg`;
     default: return assertNever(platform);
@@ -134,8 +134,8 @@ async function installPandocWindows(version: string) {
   let downloadPath: string;
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
-  } catch (error) {
-    throw `Failed to download Pandoc ${version}: ${error}`;
+  } catch (error: any) {
+    throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`,);
   }
 
   if (!tempDirectory) {
@@ -166,22 +166,26 @@ function getPandocSubDir(version: string) {
 //#region Linux (Debian)
 
 async function installPandocLinux(version: string) {
-  const [downloadUrl, fileName] = getDownloadLink("linux", version);
+  const [downloadUrl] = getDownloadLink("linux", version);
 
   let downloadPath: string;
   try {
-    downloadPath = await tc.downloadTool(downloadUrl);
-  } catch (error) {
-    throw `Failed to download Pandoc ${version}: ${error}`;
-  }
-
-  await io.mv(downloadPath, path.join(tempDirectory, fileName));
-
-  try {
-    await exec.exec("sudo", ["dpkg", "-i", path.join(tempDirectory, fileName)]);
+    downloadPath = await tc.downloadTool(downloadUrl, undefined);
   } catch (error: any) {
-    throw new Error(`Failed to install pandoc: ${error}`);
+    throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`);
   }
+
+  const extractionPath = tc.extractTar(downloadPath);
+
+  const binaryPath = path.join(extractionPath, `pandoc-${version}/bin`);
+
+  const cachedDir = await tc.cacheDir(
+    binaryPath,
+    "pandoc",
+    version,
+  );
+
+  core.addPath(cachedDir);
 }
 
 //#endregion
