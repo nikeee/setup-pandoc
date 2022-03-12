@@ -3,9 +3,12 @@ import cp from "child_process";
 
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
+import * as httpm from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
 import { compare } from "compare-versions";
+
+const PERMANENT_FALLBACK_VERSION = "2.17.1.1";
 
 type Platform = "windows" | "mac" | "linux";
 
@@ -32,16 +35,15 @@ function getBaseLocation(platform: Platform) {
 const tempDirectory = process.env["RUNNER_TEMP"] ?? path.join(getBaseLocation(platform), "actions", "temp");
 
 async function run() {
+  const userSuppliedVersion = core.getInput("pandoc-version", {
+    required: false,
+    trimWhitespace: true,
+  });
+
   try {
-    const userSuppliedVersion = core.getInput("pandoc-version", {
-      required: false,
-      trimWhitespace: true,
-    });
-
     const effectiveVersion = !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
-      ? ""
+      ? await fetchLatestVersion()
       : userSuppliedVersion;
-
 
     core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
     await getPandoc(effectiveVersion);
@@ -176,6 +178,47 @@ async function installPandocLinux(version: string) {
     throw new Error(`Failed to install pandoc: ${error}`);
   }
 }
+
+//#endregion
+
+//#region Version Fetching
+
+type ReleasesResponse = GhRelease[];
+interface GhRelease {
+  /** Auto-Incrementing ID. higher -> newer */
+  id: number;
+  draft: boolean;
+  url: string;
+  tag_name: string;
+  assets: GhReleaseAsset[];
+}
+
+interface GhReleaseAsset {
+  name: string;
+  browser_download_url: string;
+  content_type: string;
+}
+
+async function getAvailableVersions(): Promise<ReleasesResponse | undefined> {
+  // this returns versions descending so latest is first
+  const http = new httpm.HttpClient("setup-hurl", [], {
+    allowRedirects: true,
+    maxRedirects: 3
+  });
+
+  const url = "https://api.github.com/repos/jgm/pandoc/releases";
+  const res = (await http.getJson<ReleasesResponse>(url)).result;
+
+  return res
+    ? res.filter(r => !r.draft).sort((a, b) => b.id - a.id)
+    : undefined;
+}
+
+async function fetchLatestVersion(): Promise<string> {
+  const versions = await getAvailableVersions();
+  return versions?.[0]?.tag_name ?? PERMANENT_FALLBACK_VERSION;
+}
+
 
 //#endregion
 
