@@ -66,8 +66,6 @@ async function installPandoc(userSuppliedVersion: string | null | undefined) {
     return effectiveVersion;
   }
 
-  core.info(`No pandoc in cache found for version ${cachedToolPath}`);
-
   core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
   await getPandoc(effectiveVersion);
 
@@ -83,25 +81,6 @@ export async function getPandoc(version: string) {
   }
 }
 
-function getDownloadLink(platform: Platform, version: string): [url: string, fileName: string] {
-  const encodedVersion = encodeURIComponent(version);
-  const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
-  const fileName = getDownloadFileName(platform, version);
-  return [
-    `${base}/${fileName}`,
-    fileName,
-  ];
-}
-
-function getDownloadFileName(platform: Platform, version: string) {
-  const encodedVersion = encodeURIComponent(version);
-  switch (platform) {
-    case "linux": return `pandoc-${encodedVersion}-linux-amd64.tar.gz`;
-    case "windows": return `pandoc-${encodedVersion}-windows-x86_64.zip`;
-    case "mac": return `pandoc-${encodedVersion}-macOS.pkg`;
-    default: return assertNever(platform);
-  }
-}
 
 //#region Mac
 
@@ -159,7 +138,7 @@ function getPandocSubDir(version: string) {
 }
 
 //#endregion
-//#region Linux (Debian)
+//#region Linux
 
 async function installPandocLinux(version: string) {
   const [downloadUrl] = getDownloadLink("linux", version);
@@ -217,6 +196,26 @@ async function getAvailableVersions(): Promise<ReleasesResponse | undefined> {
 async function fetchLatestVersion(): Promise<string> {
   const versions = await getAvailableVersions();
   return versions?.[0]?.tag_name ?? PERMANENT_FALLBACK_VERSION;
+}
+
+function getDownloadLink(platform: Platform, version: string): [url: string, fileName: string] {
+  const encodedVersion = encodeURIComponent(version);
+  const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
+  const fileName = getDownloadFileName(platform, version);
+  return [
+    `${base}/${fileName}`,
+    fileName,
+  ];
+}
+
+function getDownloadFileName(platform: Platform, version: string): string {
+  const encodedVersion = encodeURIComponent(version);
+  switch (platform) {
+    case "linux": return `pandoc-${encodedVersion}-linux-amd64.tar.gz`;
+    case "windows": return `pandoc-${encodedVersion}-windows-x86_64.zip`;
+    case "mac": return `pandoc-${encodedVersion}-macOS.pkg`;
+    default: return assertNever(platform);
+  }
 }
 
 //#endregion

@@ -1,7 +1,7 @@
 # setup-pandoc
 This action is based on the [setup-python action of r-lib](https://github.com/r-lib/actions). It differs in the following ways:
 - When not specified, it will use the latest pandoc version available
-- Downloaded tools are cached
+- Support for tool cache
 - Support for other Linux distributions beside debian derivatives
 
 This action sets up pandoc for use in later steps in an action.
