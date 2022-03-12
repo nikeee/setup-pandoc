@@ -12,7 +12,7 @@
     "format-check": "prettier --check **/*.ts",
     "test": "jest"
   },
-  "repository": "https://github.com/nikeee/setup-pandoc2",
+  "repository": "https://github.com/nikeee/setup-pandoc",
   "keywords": [
     "actions",
     "setup",
