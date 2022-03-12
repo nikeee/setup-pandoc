@@ -66,6 +66,8 @@ async function installPandoc(userSuppliedVersion: string | null | undefined) {
     return effectiveVersion;
   }
 
+  core.info(`No pandoc in cache found for version ${cachedToolPath}`);
+
   core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
   await getPandoc(effectiveVersion);
 
@@ -138,18 +140,12 @@ async function installPandocWindows(version: string) {
     throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`,);
   }
 
-  if (!tempDirectory) {
-    throw new Error("Temp directory not set");
-  }
+  const extractionPath = await tc.extractZip(downloadPath);
 
-  const extPath = await tc.extractZip(downloadPath);
+  const binDirPath = path.join(extractionPath, getPandocSubDir(version));
 
-  const toolPath = await tc.cacheDir(extPath, "pandoc", version);
-
-  // It extracts to this folder
-  const toolRoot = path.join(toolPath, getPandocSubDir(version));
-
-  core.addPath(toolRoot);
+  const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
+  core.addPath(cachedBinDirPath);
 }
 
 function getPandocSubDir(version: string) {
@@ -177,15 +173,10 @@ async function installPandocLinux(version: string) {
 
   const extractionPath = await tc.extractTar(downloadPath);
 
-  const binaryPath = path.join(extractionPath, `pandoc-${version}/bin`);
+  const binDirPath = path.join(extractionPath, `pandoc-${version}/bin`);
 
-  const cachedDir = await tc.cacheDir(
-    binaryPath,
-    "pandoc",
-    version,
-  );
-
-  core.addPath(cachedDir);
+  const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
+  core.addPath(cachedBinDirPath);
 }
 
 //#endregion
