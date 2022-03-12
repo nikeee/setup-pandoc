@@ -41,15 +41,7 @@ async function run() {
   });
 
   try {
-    const effectiveVersion = !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
-      ? await fetchLatestVersion()
-      : userSuppliedVersion;
-
-    core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
-    await getPandoc(effectiveVersion);
-
-    // core.addPath(installDir);
-    // core.info("Added pandoc to the path");
+    const effectiveVersion = await installPandoc(userSuppliedVersion);
     core.info(`Successfully set up pandoc version ${effectiveVersion}`);
 
     // output the version actually being used
@@ -60,6 +52,24 @@ async function run() {
   } catch (error: any) {
     core.setFailed(error?.message ?? error ?? "Unknown error");
   }
+}
+
+async function installPandoc(userSuppliedVersion: string | null | undefined) {
+  const effectiveVersion = !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
+    ? await fetchLatestVersion()
+    : userSuppliedVersion;
+
+  const cachedToolPath = tc.find("pandoc", effectiveVersion);
+  if (cachedToolPath) {
+    core.info(`Found in cache @ ${cachedToolPath}`);
+    core.addPath(cachedToolPath);
+    return effectiveVersion;
+  }
+
+  core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
+  await getPandoc(effectiveVersion);
+
+  return effectiveVersion;
 }
 
 export async function getPandoc(version: string) {
@@ -196,7 +206,7 @@ interface GhReleaseAsset {
 
 async function getAvailableVersions(): Promise<ReleasesResponse | undefined> {
   // this returns versions descending so latest is first
-  const http = new httpm.HttpClient("setup-hurl", [], {
+  const http = new httpm.HttpClient("setup-pandoc", [], {
     allowRedirects: true,
     maxRedirects: 3
   });
