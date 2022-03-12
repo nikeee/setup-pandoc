@@ -1,29 +1,24 @@
 # setup-pandoc
+This action is based on the [setup-python action of r-lib](https://github.com/r-lib/actions). It differs in the following ways:
+- When not specified, it will use the latest pandoc action available
+- Downloaded tools are cached
 
-[![RStudio community](https://img.shields.io/badge/community-github--actions-blue?style=social&logo=rstudio&logoColor=75AADB)](https://community.rstudio.com/new-topic?category=Package%20development&tags=github-actions)
-
-This action sets up pandoc and pandoc-citeproc by:
-
-- downloading and caching a relased version of pandoc by version and adding it to the PATH
-
-# Usage
-
+This action sets up pandoc for use in later steps in an action.
+## Usage
 See [action.yml](action.yml)
 
-Basic:
+Example usage:
 ```yaml
 steps:
 - uses: actions/checkout@master
-- uses: r-lib/actions/setup-pandoc@v1
+- uses: nikeee/setup-pandoc@v1
   with:
     pandoc-version: '2.7.3' # The pandoc version to download (if necessary) and use.
 - run: echo "# Test" | pandoc -t html
 ```
 
-# License
+## License
+The scripts and documentation in this project are released under the [MIT License](LICENSE).
 
-The scripts and documentation in this project are released under the [MIT License](LICENSE)
-
-# Contributions
-
-Contributions are welcome!  See [Contributor's Guide](docs/contributors.md)
+## Contributions
+Contributions are welcome!
