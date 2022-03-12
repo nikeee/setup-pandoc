@@ -128,7 +128,6 @@ async function installPandocWindows(version: string) {
     throw `Failed to download Pandoc ${version}: ${error}`;
   }
 
-  // Extract
   if (!tempDirectory) {
     throw new Error("Temp directory not set");
   }
@@ -169,11 +168,7 @@ async function installPandocLinux(version: string) {
   await io.mv(downloadPath, path.join(tempDirectory, fileName));
 
   try {
-    await exec.exec("sudo apt-get", ["install", "-y", "gdebi-core"]);
-    await exec.exec("sudo gdebi", [
-      "--non-interactive",
-      path.join(tempDirectory, fileName)
-    ]);
+    await exec.exec("sudo", ["dpkg", "-i", path.join(tempDirectory, fileName)]);
   } catch (error: any) {
     throw new Error(`Failed to install pandoc: ${error}`);
   }
