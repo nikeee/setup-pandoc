@@ -1,8 +1,10 @@
 {
   "name": "setup-pandoc",
-  "version": "0.0.0",
-  "private": true,
   "description": "pandoc setup action",
+  "version": "1.0.0",
+  "private": true,
+  "author": "Niklas Mollenhauer",
+  "license": "MIT",
   "main": "lib/setup-pandoc.js",
   "scripts": {
     "build": "tsc",
@@ -10,20 +12,12 @@
     "format-check": "prettier --check **/*.ts",
     "test": "jest"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/r-lib/actions.git",
-    "directory": "setup-pandoc"
-  },
+  "repository": "https://github.com/nikeee/setup-pandoc2",
   "keywords": [
     "actions",
-    "r",
     "setup",
     "pandoc"
   ],
-  "author": "jimhester",
-  "license": "MIT",
-  "homepage": "https://github.com/r-lib/actions/tree/master/setup-pandoc",
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/exec": "^1.0.0",
