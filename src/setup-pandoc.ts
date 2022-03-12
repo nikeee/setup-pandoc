@@ -42,12 +42,16 @@ async function run() {
 
   try {
     const effectiveVersion = await installPandoc(userSuppliedVersion);
-    core.info(`Successfully set up pandoc version ${effectiveVersion}`);
+    core.debug(`Successfully set up pandoc version ${effectiveVersion}`);
+
+    core.startGroup("Pandoc Information");
 
     // output the version actually being used
     const pandocPath = await io.which("pandoc");
     const pandocVersion = (cp.execSync(`${pandocPath} --version`) ?? "").toString();
     core.info(pandocVersion);
+
+    core.endGroup();
 
   } catch (error: any) {
     core.setFailed(error?.message ?? error ?? "Unknown error");
