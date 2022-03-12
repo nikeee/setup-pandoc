@@ -175,7 +175,7 @@ async function installPandocLinux(version: string) {
     throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`);
   }
 
-  const extractionPath = tc.extractTar(downloadPath);
+  const extractionPath = await tc.extractTar(downloadPath);
 
   const binaryPath = path.join(extractionPath, `pandoc-${version}/bin`);
 
@@ -227,7 +227,6 @@ async function fetchLatestVersion(): Promise<string> {
   const versions = await getAvailableVersions();
   return versions?.[0]?.tag_name ?? PERMANENT_FALLBACK_VERSION;
 }
-
 
 //#endregion
 
