@@ -9,6 +9,14 @@ inputs:
       Exact version of pandoc to use.
       You can find available versions here:
       https://github.com/jgm/pandoc/releases
+  token:
+    description: |
+      This option defaults to the workflow scoped GitHub Token.
+      It is used to not hit the rate limit while determining the 'latest' version of pandoc.
+      If you need to specify a different token to be used, you can use this option.
+      We expect that normal users typically don't have to do that.
+    required: false
+    default: ${{ github.token }}
 runs:
   using: 'node16'
   main: 'lib/setup-pandoc.js'

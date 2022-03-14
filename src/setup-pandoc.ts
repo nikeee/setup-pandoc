@@ -3,7 +3,7 @@ import cp from "child_process";
 
 import * as core from "@actions/core";
 import * as exec from "@actions/exec";
-import * as httpm from "@actions/http-client";
+import { HttpClient } from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
 import { compare } from "compare-versions";
@@ -182,12 +182,26 @@ interface GhReleaseAsset {
   content_type: string;
 }
 
+function getAuthHeaderValue(): `Bearer ${string}` | undefined {
+  const authToken = core.getInput("token", {
+    // Don't throw or something. It is only used to fetch the latest version of pandoc, so if it's missing,
+    // the worst that could happen is hitting the API rate limit.
+    required: false,
+    trimWhitespace: true,
+  }) ?? undefined;
+
+  return !!authToken
+    ? `Bearer ${authToken}`
+    : undefined;
+}
+
 async function fetchLatestVersion(): Promise<string> {
-  const http = new httpm.HttpClient("setup-pandoc", [], {
+  const http = new HttpClient("setup-pandoc", [], {
     allowRedirects: true,
     maxRedirects: 3,
     headers: {
-      "Accept": "application/vnd.github.v3+json",
+      Accept: "application/vnd.github.v3+json",
+      Authorization: getAuthHeaderValue(),
     },
   });
 
