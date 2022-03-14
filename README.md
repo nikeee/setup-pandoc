@@ -8,7 +8,16 @@ This action sets up pandoc for use in later steps in an action.
 ## Usage
 See [action.yml](action.yml)
 
-Example usage:
+
+Usage with latest pandoc version:
+```yaml
+steps:
+- uses: actions/checkout@master
+- uses: nikeee/setup-pandoc@v1
+- run: echo "# Test" | pandoc -t html
+```
+
+Example usage win specific version:
 ```yaml
 steps:
 - uses: actions/checkout@master
