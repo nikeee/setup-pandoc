@@ -182,24 +182,18 @@ interface GhReleaseAsset {
   content_type: string;
 }
 
-async function getAvailableVersions(): Promise<ReleasesResponse | undefined> {
-  // this returns versions descending so latest is first
+async function fetchLatestVersion(): Promise<string> {
   const http = new httpm.HttpClient("setup-pandoc", [], {
     allowRedirects: true,
-    maxRedirects: 3
+    maxRedirects: 3,
+    headers: {
+      "Accept": "application/vnd.github.v3+json",
+    },
   });
 
-  const url = "https://api.github.com/repos/jgm/pandoc/releases";
-  const res = (await http.getJson<ReleasesResponse>(url)).result;
-
-  return res
-    ? res.filter(r => !r.draft).sort((a, b) => b.id - a.id)
-    : undefined;
-}
-
-async function fetchLatestVersion(): Promise<string> {
-  const versions = await getAvailableVersions();
-  return versions?.[0]?.tag_name ?? PERMANENT_FALLBACK_VERSION;
+  const latestReleaseUrl = "https://api.github.com/repos/jgm/pandoc/releases/latest";
+  const release = (await http.getJson<GhRelease>(latestReleaseUrl)).result;
+  return release?.tag_name ?? PERMANENT_FALLBACK_VERSION;
 }
 
 function getDownloadLink(platform: Platform, version: string): [url: string, fileName: string] {
