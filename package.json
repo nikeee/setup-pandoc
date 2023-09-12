@@ -10,7 +10,7 @@
     "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "test": "jest"
+    "test": "tsc --noEmit"
   },
   "repository": "https://github.com/nikeee/setup-pandoc",
   "keywords": [
@@ -27,11 +27,8 @@
     "compare-versions": "^4.1.4"
   },
   "devDependencies": {
-    "@types/jest": "^29.5.4",
     "@types/node": "^20.6.0",
-    "jest": "^29.7.0",
     "prettier": "^2.8.8",
-    "ts-jest": "^29.1.1",
     "typescript": "^5.2.2"
   }
 }
