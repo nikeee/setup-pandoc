@@ -12,9 +12,10 @@ const PERMANENT_FALLBACK_VERSION = "2.17.1.1";
 
 type Platform = "windows" | "mac" | "linux";
 
-const platform: Platform = process.platform === "win32"
-  ? "windows"
-  : process.platform === "darwin"
+const platform: Platform =
+  process.platform === "win32"
+    ? "windows"
+    : process.platform === "darwin"
     ? "mac"
     : "linux";
 
@@ -22,7 +23,7 @@ function getBaseLocation(platform: Platform) {
   switch (platform) {
     case "windows":
       // On windows, use the USERPROFILE env variable
-      return process.env["USERPROFILE"] ?? "C:\\"
+      return process.env["USERPROFILE"] ?? "C:\\";
     case "mac":
       return "/Users";
     case "linux":
@@ -32,7 +33,9 @@ function getBaseLocation(platform: Platform) {
   }
 }
 
-const tempDirectory = process.env["RUNNER_TEMP"] ?? path.join(getBaseLocation(platform), "actions", "temp");
+const tempDirectory =
+  process.env["RUNNER_TEMP"] ??
+  path.join(getBaseLocation(platform), "actions", "temp");
 
 async function run() {
   const userSuppliedVersion = core.getInput("pandoc-version", {
@@ -48,20 +51,22 @@ async function run() {
 
     // output the version actually being used
     const pandocPath = await io.which("pandoc");
-    const pandocVersion = (cp.execSync(`${pandocPath} --version`) ?? "").toString();
+    const pandocVersion = (
+      cp.execSync(`${pandocPath} --version`) ?? ""
+    ).toString();
     core.info(pandocVersion);
 
     core.endGroup();
-
   } catch (error: any) {
     core.setFailed(error?.message ?? error ?? "Unknown error");
   }
 }
 
 async function installPandoc(userSuppliedVersion: string | null | undefined) {
-  const effectiveVersion = !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
-    ? await fetchLatestVersion()
-    : userSuppliedVersion;
+  const effectiveVersion =
+    !userSuppliedVersion || userSuppliedVersion.toLowerCase() === "latest"
+      ? await fetchLatestVersion()
+      : userSuppliedVersion;
 
   const cachedToolPath = tc.find("pandoc", effectiveVersion);
   if (cachedToolPath) {
@@ -70,7 +75,9 @@ async function installPandoc(userSuppliedVersion: string | null | undefined) {
     return effectiveVersion;
   }
 
-  core.debug(`Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`);
+  core.debug(
+    `Fetching pandoc version ${effectiveVersion} (user requested "${userSuppliedVersion}")`,
+  );
   await getPandoc(effectiveVersion);
 
   return effectiveVersion;
@@ -78,13 +85,16 @@ async function installPandoc(userSuppliedVersion: string | null | undefined) {
 
 export async function getPandoc(version: string) {
   switch (platform) {
-    case "windows": return installPandocWindows(version);
-    case "mac": return installPandocMac(version);
-    case "linux": return installPandocLinux(version);
-    default: return assertNever(platform);
+    case "windows":
+      return installPandocWindows(version);
+    case "mac":
+      return installPandocMac(version);
+    case "linux":
+      return installPandocLinux(version);
+    default:
+      return assertNever(platform);
   }
 }
-
 
 //#region Mac
 
@@ -106,7 +116,7 @@ async function installPandocMac(version: string) {
     "-pkg",
     path.join(tempDirectory, fileName),
     "-target",
-    "/"
+    "/",
   ]);
 }
 
@@ -120,7 +130,9 @@ async function installPandocWindows(version: string) {
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
   } catch (error: any) {
-    throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`,);
+    throw new Error(
+      `Failed to download Pandoc ${version}: ${error?.message ?? error}`,
+    );
   }
 
   const extractionPath = await tc.extractZip(downloadPath);
@@ -132,11 +144,9 @@ async function installPandocWindows(version: string) {
 }
 
 function getPandocSubDir(version: string) {
-  if (compare(version, "2.9.2", ">="))
-    return `pandoc-${version}`;
+  if (compare(version, "2.9.2", ">=")) return `pandoc-${version}`;
 
-  if (compare(version, "2.9.1", "="))
-    return "";
+  if (compare(version, "2.9.1", "=")) return "";
 
   return `pandoc-${version}-windows-x86_64`;
 }
@@ -151,7 +161,9 @@ async function installPandocLinux(version: string) {
   try {
     downloadPath = await tc.downloadTool(downloadUrl, undefined);
   } catch (error: any) {
-    throw new Error(`Failed to download Pandoc ${version}: ${error?.message ?? error}`);
+    throw new Error(
+      `Failed to download Pandoc ${version}: ${error?.message ?? error}`,
+    );
   }
 
   const extractionPath = await tc.extractTar(downloadPath);
@@ -183,16 +195,15 @@ interface GhReleaseAsset {
 }
 
 function getAuthHeaderValue(): `Bearer ${string}` | undefined {
-  const authToken = core.getInput("token", {
-    // Don't throw or something. It is only used to fetch the latest version of pandoc, so if it's missing,
-    // the worst that could happen is hitting the API rate limit.
-    required: false,
-    trimWhitespace: true,
-  }) ?? undefined;
+  const authToken =
+    core.getInput("token", {
+      // Don't throw or something. It is only used to fetch the latest version of pandoc, so if it's missing,
+      // the worst that could happen is hitting the API rate limit.
+      required: false,
+      trimWhitespace: true,
+    }) ?? undefined;
 
-  return !!authToken
-    ? `Bearer ${authToken}`
-    : undefined;
+  return !!authToken ? `Bearer ${authToken}` : undefined;
 }
 
 async function fetchLatestVersion(): Promise<string> {
@@ -205,28 +216,33 @@ async function fetchLatestVersion(): Promise<string> {
     },
   });
 
-  const latestReleaseUrl = "https://api.github.com/repos/jgm/pandoc/releases/latest";
+  const latestReleaseUrl =
+    "https://api.github.com/repos/jgm/pandoc/releases/latest";
   const release = (await http.getJson<GhRelease>(latestReleaseUrl)).result;
   return release?.tag_name ?? PERMANENT_FALLBACK_VERSION;
 }
 
-function getDownloadLink(platform: Platform, version: string): [url: string, fileName: string] {
+function getDownloadLink(
+  platform: Platform,
+  version: string,
+): [url: string, fileName: string] {
   const encodedVersion = encodeURIComponent(version);
   const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
   const fileName = getDownloadFileName(platform, version);
-  return [
-    `${base}/${fileName}`,
-    fileName,
-  ];
+  return [`${base}/${fileName}`, fileName];
 }
 
 function getDownloadFileName(platform: Platform, version: string): string {
   const encodedVersion = encodeURIComponent(version);
   switch (platform) {
-    case "linux": return `pandoc-${encodedVersion}-linux-amd64.tar.gz`;
-    case "windows": return `pandoc-${encodedVersion}-windows-x86_64.zip`;
-    case "mac": return `pandoc-${encodedVersion}-macOS.pkg`;
-    default: return assertNever(platform);
+    case "linux":
+      return `pandoc-${encodedVersion}-linux-amd64.tar.gz`;
+    case "windows":
+      return `pandoc-${encodedVersion}-windows-x86_64.zip`;
+    case "mac":
+      return `pandoc-${encodedVersion}-macOS.pkg`;
+    default:
+      return assertNever(platform);
   }
 }
 
