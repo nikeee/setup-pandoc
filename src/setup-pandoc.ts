@@ -240,7 +240,11 @@ function getDownloadFileName(platform: Platform, version: string): string {
     case "windows":
       return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac":
-      return `pandoc-${encodedVersion}-macOS.pkg`;
+      if (compare(encodedVersion, "3.1.1", "<=")){
+        return `pandoc-${encodedVersion}-macOS.pkg`;
+      } else {
+        return `pandoc-${encodedVersion}-x86_64-macOS.pkg`;
+      }
     default:
       return assertNever(platform);
   }
