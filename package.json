@@ -27,7 +27,7 @@
     "compare-versions": "^6.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.6.0",
+    "@types/node": "^20.8.0",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   }
