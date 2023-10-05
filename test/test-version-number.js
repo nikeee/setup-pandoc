@@ -5,7 +5,7 @@ const process = require('process');
 const desiredVersion = process.argv[2];
 
 if (!desiredVersion) {
-  console.error('Usage: node test-pandoc-version.js <desired_version>');
+  console.error('Usage: node check-pandoc-version.js <desired_version>');
   process.exit(1); // Exit with failure code
 }
 
@@ -13,16 +13,16 @@ try {
   // Run the "pandoc --version" command and capture the output
   const output = execSync('pandoc --version', { encoding: 'utf-8' });
 
-  // Use regular expressions to extract the version number
+  // Use regular expressions to extract the first two numbers of the version
   const versionMatch = output.match(/pandoc (\d+\.\d+)/);
 
   if (versionMatch) {
-    const pandocVersion = versionMatch[1];
+    const pandocVersion = versionMatch[1].split('.').slice(0, 2).join('.'); // Extract the first two numbers
     if (pandocVersion === desiredVersion) {
-      console.log(`Pandoc Version is ${desiredVersion}`);
+      console.log(`Pandoc Version (first two numbers) is ${desiredVersion}`);
       process.exit(0); // Exit with success code
     } else {
-      console.log(`Pandoc Version is not ${desiredVersion} (Found: ${pandocVersion})`);
+      console.log(`Pandoc Version (first two numbers) is not ${desiredVersion} (Found: ${pandocVersion})`);
       process.exit(1); // Exit with failure code
     }
   } else {
