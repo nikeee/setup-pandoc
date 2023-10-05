@@ -16,6 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
-      - run: npm install
-      - run: npm run build --if-present
-      - run: npm test
+      - name: setup-pandoc
+        uses: ./
+        with:
+          pandoc-version: '2.7.3'
+      - name: Validate version
+        run: node test/test-version-number.js 2.7.3
