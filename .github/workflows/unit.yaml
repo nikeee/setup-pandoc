@@ -21,8 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
-      - name: set pandoc version
-        run:
       - name: setup-pandoc
         uses: ./
         with:
