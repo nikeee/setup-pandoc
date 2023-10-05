@@ -116,7 +116,6 @@ async function installPandocMac(version: string) {
     "-pkg",
     path.join(tempDirectory, fileName),
     "-target",
-    "/",
   ]);
 }
 
