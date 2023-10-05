@@ -22,3 +22,5 @@ jobs:
           pandoc-version: '3.1.8'
       - name: Validate version
         run: node test/test-version-number.js 3.1.8
+      - name: Test outputs
+        run: node test/test-outputs.js
