@@ -1,8 +1,8 @@
 const { execSync } = require('child_process');
 const process = require('process');
 
-// Check if the desired version parameter is provided
-const desiredVersion = process.argv[2];
+// Check if the desired version parameter is provided and only use the 2 first numbers.
+const desiredVersion = process.argv[2].split('.').slice(0, 2).join('.');
 
 if (!desiredVersion) {
   console.error('Usage: node check-pandoc-version.js <desired_version>');
@@ -19,10 +19,10 @@ try {
   if (versionMatch) {
     const pandocVersion = versionMatch[1].split('.').slice(0, 2).join('.'); // Extract the first two numbers
     if (pandocVersion === desiredVersion) {
-      console.log(`Pandoc Version (first two numbers) is ${desiredVersion}`);
+      console.log(`Pandoc Version is ${desiredVersion}`);
       process.exit(0); // Exit with success code
     } else {
-      console.log(`Pandoc Version (first two numbers) is not ${desiredVersion} (Found: ${pandocVersion})`);
+      console.log(`Pandoc Version is not ${desiredVersion} (Found: ${pandocVersion})`);
       process.exit(1); // Exit with failure code
     }
   } else {
