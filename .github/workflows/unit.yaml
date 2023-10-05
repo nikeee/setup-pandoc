@@ -12,11 +12,17 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        pandoc: ["3.1.8", "3.0", "2.9"]
+        pandoc: ["3.1.8"]
+        include:
+            # prior structure of macOs files
+          - os: macos-latest
+            pandoc: "3.0"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
+      - name: set pandoc version
+        run:
       - name: setup-pandoc
         uses: ./
         with:
