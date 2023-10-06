@@ -1,11 +1,17 @@
 const { execSync } = require('child_process');
+const { os } = require('os');
 
 // Run the Pandoc command and capture the HTML output
 const pandocCommand = 'echo "# Test" | pandoc -t html';
 const pandocOutput = execSync(pandocCommand, { encoding: 'utf-8' });
 
 // Define the expected HTML output
-const expectedOutput = '<h1 id="test">Test</h1>';
+const expectedOutputs = {
+  win32: '<h1 id="test">Test</h1>',
+  darwin: '<h1 id="test">Test</h1>',
+  linux: '<h1 id="test">Test</h1>',
+};
+const expectedOutput = expectedOutputs[os.platform()]
 
 // Compare the Pandoc output with the expected output
 if (pandocOutput.trim() === expectedOutput) {
