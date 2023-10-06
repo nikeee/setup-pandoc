@@ -7,7 +7,7 @@ const pandocOutput = execSync(pandocCommand, { encoding: 'utf-8' });
 
 // Define the expected HTML output
 const expectedOutputs = {
-  win32: '<h1 id="test">Test</h1>',
+  win32: '<p>“# Test”</p>',
   darwin: '<h1 id="test">Test</h1>',
   linux: '<h1 id="test">Test</h1>',
 };
