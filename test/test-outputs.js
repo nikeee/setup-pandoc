@@ -1,5 +1,5 @@
 const { execSync } = require('child_process');
-const { os } = require('os');
+const os = require('os');
 
 // Run the Pandoc command and capture the HTML output
 const pandocCommand = 'echo "# Test" | pandoc -t html';
