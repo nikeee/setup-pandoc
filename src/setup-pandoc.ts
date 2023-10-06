@@ -1,8 +1,8 @@
 import * as path from "path";
+import * as os from "os";
 import cp from "child_process";
 
 import * as core from "@actions/core";
-import * as exec from "@actions/exec";
 import { HttpClient } from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
@@ -13,9 +13,9 @@ const PERMANENT_FALLBACK_VERSION = "2.17.1.1";
 type Platform = "windows" | "mac" | "linux";
 
 const platform: Platform =
-  process.platform === "win32"
+  os.platform() === "win32"
     ? "windows"
-    : process.platform === "darwin"
+    : os.platform() === "darwin"
     ? "mac"
     : "linux";
 
