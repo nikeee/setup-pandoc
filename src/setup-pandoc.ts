@@ -110,11 +110,12 @@ async function installPandocMac(version: string) {
     );
   }
 
-  throw new Error("This is a test to check this is actually")
-
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(extractionPath, `${path.parse(filename).name}/bin`);
+  const binDirPath = path.join(
+    extractionPath,
+    `${path.parse(filename).name}/bin`,
+  );
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
@@ -239,7 +240,7 @@ function getDownloadFileName(platform: Platform, version: string): string {
     case "windows":
       return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac":
-      if (compare(encodedVersion, "3.1.1", "<=")){
+      if (compare(encodedVersion, "3.1.1", "<=")) {
         return `pandoc-${encodedVersion}-macOS.zip`;
       } else {
         return `pandoc-${encodedVersion}-x86_64-macOS.zip`;
