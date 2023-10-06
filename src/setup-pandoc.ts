@@ -99,26 +99,24 @@ export async function getPandoc(version: string) {
 //#region Mac
 
 async function installPandocMac(version: string) {
-  const [downloadUrl, fileName] = getDownloadLink("mac", version);
+  const [downloadUrl] = getDownloadLink("mac", version);
 
   let downloadPath: string;
   try {
     downloadPath = await tc.downloadTool(downloadUrl);
-  } catch (error) {
-    throw new Error(`Failed to download Pandoc ${version}: ${error}`);
+  } catch (error: any) {
+    throw new Error(
+      `Failed to download Pandoc ${version}: ${error?.message ?? error}`,
+    );
   }
 
-  await io.mv(downloadPath, path.join(tempDirectory, fileName));
+  const extractionPath = await tc.extractZip(downloadPath);
 
-  exec.exec("sudo installer", [
-    "-allowUntrusted",
-    "-dumplog",
-    "-pkg",
-    path.join(tempDirectory, fileName),
-    "-target",
-  ]);
+  const binDirPath = path.join(extractionPath, `pandoc-${version}/bin`);
+
+  const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
+  core.addPath(cachedBinDirPath);
 }
-
 //#endregion
 //#region Windows
 
@@ -240,9 +238,9 @@ function getDownloadFileName(platform: Platform, version: string): string {
       return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac":
       if (compare(encodedVersion, "3.1.1", "<=")){
-        return `pandoc-${encodedVersion}-macOS.pkg`;
+        return `pandoc-${encodedVersion}-macOS.zip`;
       } else {
-        return `pandoc-${encodedVersion}-x86_64-macOS.pkg`;
+        return `pandoc-${encodedVersion}-x86_64-macOS.zip`;
       }
     default:
       return assertNever(platform);
