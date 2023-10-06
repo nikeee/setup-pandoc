@@ -10,9 +10,10 @@
     "build": "tsc",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
-    "test": "tsc --noEmit"
+    "test": "tsc --noEmit",
+    "precommit-msg": "echo 'Pre-commit checks...' && exit 0"
   },
-  "pre-commit": ["format", "build"],
+  "pre-commit": ["precommit-msg", "format", "build"],
   "repository": "https://github.com/nikeee/setup-pandoc",
   "keywords": [
     "actions",
