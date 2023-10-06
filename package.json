@@ -12,6 +12,7 @@
     "format-check": "prettier --check **/*.ts",
     "test": "tsc --noEmit"
   },
+  "pre-commit": ["format", "build"],
   "repository": "https://github.com/nikeee/setup-pandoc",
   "keywords": [
     "actions",
@@ -29,6 +30,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.8.0",
+    "pre-commit": "^1.2.2",
     "prettier": "^3.0.3",
     "typescript": "^5.2.2"
   }
