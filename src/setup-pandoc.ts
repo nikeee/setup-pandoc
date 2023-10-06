@@ -119,9 +119,9 @@ async function installPandocMac(version: string) {
 }
 
 function getMacPandocSubDir(version: string) {
-  if (compare(version, "3.1.0", "<")) return `pandoc-${version}`;
+  if (compare(version, "3.1.1", "<")) return `pandoc-${version}/bin`;
 
-  return `pandoc-${version}-x86_64`;
+  return `pandoc-${version}-x86_64/bin`;
 }
 
 //#endregion
