@@ -112,11 +112,18 @@ async function installPandocMac(version: string) {
 
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(extractionPath, `pandoc-${version}/bin`);
+  const binDirPath = path.join(extractionPath, getMacPandocSubDir(version));
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
 }
+
+function getMacPandocSubDir(version: string) {
+  if (compare(version, "3.1.0", "<")) return `pandoc-${version}`;
+
+  return `pandoc-${version}-x86_64`;
+}
+
 //#endregion
 //#region Windows
 
@@ -134,13 +141,13 @@ async function installPandocWindows(version: string) {
 
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(extractionPath, getPandocSubDir(version));
+  const binDirPath = path.join(extractionPath, getWindowsPandocSubDir(version));
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
 }
 
-function getPandocSubDir(version: string) {
+function getWindowsPandocSubDir(version: string) {
   if (compare(version, "2.9.2", ">=")) return `pandoc-${version}`;
 
   if (compare(version, "2.9.1", "=")) return "";
