@@ -1,8 +1,8 @@
 import * as path from "path";
+import * as os from "os";
 import cp from "child_process";
 
 import * as core from "@actions/core";
-import * as exec from "@actions/exec";
 import { HttpClient } from "@actions/http-client";
 import * as io from "@actions/io";
 import * as tc from "@actions/tool-cache";
@@ -13,9 +13,9 @@ const PERMANENT_FALLBACK_VERSION = "2.17.1.1";
 type Platform = "windows" | "mac" | "linux";
 
 const platform: Platform =
-  process.platform === "win32"
+  os.platform() === "win32"
     ? "windows"
-    : process.platform === "darwin"
+    : os.platform() === "darwin"
     ? "mac"
     : "linux";
 
@@ -32,10 +32,6 @@ function getBaseLocation(platform: Platform) {
       return assertNever(platform);
   }
 }
-
-const tempDirectory =
-  process.env["RUNNER_TEMP"] ??
-  path.join(getBaseLocation(platform), "actions", "temp");
 
 async function run() {
   const userSuppliedVersion = core.getInput("pandoc-version", {
@@ -99,31 +95,7 @@ export async function getPandoc(version: string) {
 //#region Mac
 
 async function installPandocMac(version: string) {
-  const [downloadUrl, fileName] = getDownloadLink("mac", version);
-
-  let downloadPath: string;
-  try {
-    downloadPath = await tc.downloadTool(downloadUrl);
-  } catch (error) {
-    throw new Error(`Failed to download Pandoc ${version}: ${error}`);
-  }
-
-  await io.mv(downloadPath, path.join(tempDirectory, fileName));
-
-  exec.exec("sudo installer", [
-    "-allowUntrusted",
-    "-dumplog",
-    "-pkg",
-    path.join(tempDirectory, fileName),
-    "-target",
-  ]);
-}
-
-//#endregion
-//#region Windows
-
-async function installPandocWindows(version: string) {
-  const [downloadUrl] = getDownloadLink("windows", version);
+  const downloadUrl = getDownloadLink("mac", version);
 
   let downloadPath: string;
   try {
@@ -136,13 +108,42 @@ async function installPandocWindows(version: string) {
 
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(extractionPath, getPandocSubDir(version));
+  const binDirPath = path.join(extractionPath, getMacPandocSubDir(version));
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
 }
 
-function getPandocSubDir(version: string) {
+function getMacPandocSubDir(version: string) {
+  if (compare(version, "3.1.1", "<")) return `pandoc-${version}/bin`;
+
+  return `pandoc-${version}-x86_64/bin`;
+}
+
+//#endregion
+//#region Windows
+
+async function installPandocWindows(version: string) {
+  const downloadUrl = getDownloadLink("windows", version);
+
+  let downloadPath: string;
+  try {
+    downloadPath = await tc.downloadTool(downloadUrl);
+  } catch (error: any) {
+    throw new Error(
+      `Failed to download Pandoc ${version}: ${error?.message ?? error}`,
+    );
+  }
+
+  const extractionPath = await tc.extractZip(downloadPath);
+
+  const binDirPath = path.join(extractionPath, getWindowsPandocSubDir(version));
+
+  const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
+  core.addPath(cachedBinDirPath);
+}
+
+function getWindowsPandocSubDir(version: string) {
   if (compare(version, "2.9.2", ">=")) return `pandoc-${version}`;
 
   if (compare(version, "2.9.1", "=")) return "";
@@ -154,7 +155,7 @@ function getPandocSubDir(version: string) {
 //#region Linux
 
 async function installPandocLinux(version: string) {
-  const [downloadUrl] = getDownloadLink("linux", version);
+  const downloadUrl = getDownloadLink("linux", version);
 
   let downloadPath: string;
   try {
@@ -224,11 +225,11 @@ async function fetchLatestVersion(): Promise<string> {
 function getDownloadLink(
   platform: Platform,
   version: string,
-): [url: string, fileName: string] {
+): string {
   const encodedVersion = encodeURIComponent(version);
   const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
   const fileName = getDownloadFileName(platform, version);
-  return [`${base}/${fileName}`, fileName];
+  return `${base}/${fileName}`;
 }
 
 function getDownloadFileName(platform: Platform, version: string): string {
@@ -239,10 +240,10 @@ function getDownloadFileName(platform: Platform, version: string): string {
     case "windows":
       return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac":
-      if (compare(encodedVersion, "3.1.1", "<=")){
-        return `pandoc-${encodedVersion}-macOS.pkg`;
+      if (compare(encodedVersion, "3.1.1", "<=")) {
+        return `pandoc-${encodedVersion}-macOS.zip`;
       } else {
-        return `pandoc-${encodedVersion}-x86_64-macOS.pkg`;
+        return `pandoc-${encodedVersion}-x86_64-macOS.zip`;
       }
     default:
       return assertNever(platform);
