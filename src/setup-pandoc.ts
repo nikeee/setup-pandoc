@@ -33,10 +33,6 @@ function getBaseLocation(platform: Platform) {
   }
 }
 
-const tempDirectory =
-  process.env["RUNNER_TEMP"] ??
-  path.join(getBaseLocation(platform), "actions", "temp");
-
 async function run() {
   const userSuppliedVersion = core.getInput("pandoc-version", {
     required: false,
@@ -99,7 +95,7 @@ export async function getPandoc(version: string) {
 //#region Mac
 
 async function installPandocMac(version: string) {
-  const [downloadUrl, filename] = getDownloadLink("mac", version);
+  const downloadUrl = getDownloadLink("mac", version);
 
   let downloadPath: string;
   try {
@@ -128,7 +124,7 @@ function getMacPandocSubDir(version: string) {
 //#region Windows
 
 async function installPandocWindows(version: string) {
-  const [downloadUrl] = getDownloadLink("windows", version);
+  const downloadUrl = getDownloadLink("windows", version);
 
   let downloadPath: string;
   try {
@@ -159,7 +155,7 @@ function getWindowsPandocSubDir(version: string) {
 //#region Linux
 
 async function installPandocLinux(version: string) {
-  const [downloadUrl] = getDownloadLink("linux", version);
+  const downloadUrl = getDownloadLink("linux", version);
 
   let downloadPath: string;
   try {
@@ -229,11 +225,11 @@ async function fetchLatestVersion(): Promise<string> {
 function getDownloadLink(
   platform: Platform,
   version: string,
-): [url: string, fileName: string] {
+): string {
   const encodedVersion = encodeURIComponent(version);
   const base = `https://github.com/jgm/pandoc/releases/download/${encodedVersion}`;
   const fileName = getDownloadFileName(platform, version);
-  return [`${base}/${fileName}`, fileName];
+  return `${base}/${fileName}`;
 }
 
 function getDownloadFileName(platform: Platform, version: string): string {
