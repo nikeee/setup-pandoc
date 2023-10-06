@@ -110,6 +110,8 @@ async function installPandocMac(version: string) {
     );
   }
 
+  throw new Error("This is a test to check this is actually run")
+
   const extractionPath = await tc.extractZip(downloadPath);
 
   const binDirPath = path.join(extractionPath, `${path.parse(filename).name}/bin`);
