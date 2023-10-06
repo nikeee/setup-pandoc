@@ -99,7 +99,7 @@ export async function getPandoc(version: string) {
 //#region Mac
 
 async function installPandocMac(version: string) {
-  const [downloadUrl] = getDownloadLink("mac", version);
+  const [downloadUrl, filename] = getDownloadLink("mac", version);
 
   let downloadPath: string;
   try {
@@ -112,7 +112,7 @@ async function installPandocMac(version: string) {
 
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(extractionPath, `pandoc-${version}/bin`);
+  const binDirPath = path.join(extractionPath, `${path.parse(filename).name}/bin`);
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
