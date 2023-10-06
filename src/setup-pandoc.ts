@@ -112,10 +112,7 @@ async function installPandocMac(version: string) {
 
   const extractionPath = await tc.extractZip(downloadPath);
 
-  const binDirPath = path.join(
-    extractionPath,
-    `${path.parse(filename).name}/bin`,
-  );
+  const binDirPath = path.join(extractionPath, `pandoc-${version}/bin`);
 
   const cachedBinDirPath = await tc.cacheDir(binDirPath, "pandoc", version);
   core.addPath(cachedBinDirPath);
