@@ -7,7 +7,7 @@
   "license": "MIT",
   "main": "lib/setup-pandoc.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --noEmit && esbuild --bundle --minify --platform=node src/setup-pandoc.ts > lib/setup-pandoc.js",
     "format": "prettier --write **/*.ts",
     "format-check": "prettier --check **/*.ts",
     "test": "tsc --noEmit"
