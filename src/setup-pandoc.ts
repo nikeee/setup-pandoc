@@ -16,8 +16,8 @@ const platform: Platform =
   process.platform === "win32"
     ? "windows"
     : process.platform === "darwin"
-    ? "mac"
-    : "linux";
+      ? "mac"
+      : "linux";
 
 function getBaseLocation(platform: Platform) {
   switch (platform) {
@@ -206,13 +206,19 @@ function getAuthHeaderValue(): `Bearer ${string}` | undefined {
 }
 
 async function fetchLatestVersion(): Promise<string> {
+  const headers = {
+    Accept: "application/vnd.github.v3+json",
+  } as Record<string, string>;
+
+  const authHeader = getAuthHeaderValue();
+  if (authHeader) {
+    headers.Authorization = authHeader;
+  }
+
   const http = new HttpClient("setup-pandoc", [], {
     allowRedirects: true,
     maxRedirects: 3,
-    headers: {
-      Accept: "application/vnd.github.v3+json",
-      Authorization: getAuthHeaderValue(),
-    },
+    headers,
   });
 
   const latestReleaseUrl =
@@ -239,7 +245,7 @@ function getDownloadFileName(platform: Platform, version: string): string {
     case "windows":
       return `pandoc-${encodedVersion}-windows-x86_64.zip`;
     case "mac":
-      if (compare(encodedVersion, "3.1.1", "<=")){
+      if (compare(encodedVersion, "3.1.1", "<=")) {
         return `pandoc-${encodedVersion}-macOS.pkg`;
       } else {
         return `pandoc-${encodedVersion}-x86_64-macOS.pkg`;
