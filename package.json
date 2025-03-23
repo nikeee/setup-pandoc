@@ -19,16 +19,16 @@
     "pandoc"
   ],
   "dependencies": {
-    "@actions/core": "^1.10.1",
+    "@actions/core": "^1.11.1",
     "@actions/exec": "^1.1.1",
-    "@actions/http-client": "^2.1.1",
+    "@actions/http-client": "^2.2.3",
     "@actions/io": "^1.1.3",
-    "@actions/tool-cache": "^2.0.1",
-    "compare-versions": "^6.1.0"
+    "@actions/tool-cache": "^2.0.2",
+    "compare-versions": "^6.1.1"
   },
   "devDependencies": {
-    "@types/node": "^20.8.0",
-    "prettier": "^3.0.3",
-    "typescript": "^5.2.2"
+    "@types/node": "^22.13.11",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.2"
   }
 }
